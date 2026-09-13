@@ -23,8 +23,7 @@ output_file = f'model_C={C}.bin'
 
 # data preparation
 
-df = pd.read_csv('C:\\Users\\ahmed\\OneDrive\\Desktop\\AI Engineering\\ML course\\churn project\\dataset\\churn.csv')
-
+df = pd.read_csv('data/churn.csv')
 df.columns = df.columns.str.lower().str.replace(' ', '_')
 
 categorical_columns = list(df.dtypes[df.dtypes == 'object'].index)

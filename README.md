@@ -127,9 +127,3 @@ python predict.py
 ```
 
 Then in another terminal, `python predict-test.py` posts a sample customer and prints the risk score.
-
-## Data and credit
-
-Telco Customer Churn, originally from IBM Sample Data Sets, widely distributed via [Kaggle](https://www.kaggle.com/datasets/blastchar/telco-customer-churn). 7,043 rows, 26.5% churn rate.
-
-The modelling pipeline follows modules 3 to 5 of the [DataTalks.Club ML Zoomcamp](https://github.com/DataTalksClub/machine-learning-zoomcamp). The segment analysis, threshold economics, and the caveats section are mine.

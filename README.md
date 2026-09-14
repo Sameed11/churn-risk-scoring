@@ -100,14 +100,17 @@ Logistic regression was chosen over a tree ensemble deliberately. A gradient-boo
 ## Repo
 
 ```
-data/churn.csv              Telco customer data, 7,043 rows, 21 columns
-notebooks/churn_project.ipynb
-                            Full analysis: cleaning, EDA, feature importance,
-                            evaluation, cross-validation, and the retention
-                            budget model behind the tables above
-train.py                    Reproduces the final model and writes model.bin
-deployment/                 Flask service that scores a single customer
+data/churn.csv                  Telco customer data, 7,043 rows, 21 columns
+notebooks/churn_project.ipynb   Full analysis: cleaning, EDA, feature importance,
+                                evaluation, cross-validation, and the retention
+                                budget model behind the tables above
+
+train.py                        Reproduces the final model and writes model.bin
+
+deployment/                     Flask service that scores a single customer
+
 requirements.txt
+
 ```
 
 ## Running it

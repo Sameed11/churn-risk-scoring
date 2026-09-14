@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+"""
+Trains the churn model and saves it for the prediction service.
+
+Run from the repo root:
+    python train.py
+"""
+
+import os
 import pickle
 
 import pandas as pd
@@ -18,19 +26,23 @@ from sklearn.metrics import roc_auc_score
 
 C = 1.0
 n_splits = 5
-output_file = f'model_C={C}.bin'
+input_file = 'data/churn.csv'
+output_file = 'deployment/model.bin'
 
 
 # data preparation
 
-df = pd.read_csv('data/churn.csv')
+df = pd.read_csv(input_file)
 df.columns = df.columns.str.lower().str.replace(' ', '_')
 
-categorical_columns = list(df.dtypes[df.dtypes == 'object'].index)
+# include 'string' as well as 'object': pandas 3.x reads text columns as
+# str dtype, and an object-only check silently matches nothing
+categorical_columns = list(df.select_dtypes(include=['object', 'string']).columns)
 
 for c in categorical_columns:
     df[c] = df[c].str.lower().str.replace(' ', '_')
 
+# blank totalcharges belong to customers with zero tenure who were never billed
 df.totalcharges = pd.to_numeric(df.totalcharges, errors='coerce')
 df.totalcharges = df.totalcharges.fillna(0)
 
@@ -60,7 +72,8 @@ categorical = [
     'paymentmethod',
 ]
 
-# training 
+
+# training
 
 def train(df_train, y_train, C=1.0):
     dicts = df_train[categorical + numerical].to_dict(orient='records')
@@ -68,9 +81,10 @@ def train(df_train, y_train, C=1.0):
     dv = DictVectorizer(sparse=False)
     X_train = dv.fit_transform(dicts)
 
-    model = LogisticRegression(C=C, max_iter=1000)
+    # liblinear converges on this dataset without scaling; lbfgs does not
+    model = LogisticRegression(solver='liblinear', C=C, max_iter=1000)
     model.fit(X_train, y_train)
-    
+
     return dv, model
 
 
@@ -91,9 +105,7 @@ kfold = KFold(n_splits=n_splits, shuffle=True, random_state=1)
 
 scores = []
 
-fold = 0
-
-for train_idx, val_idx in kfold.split(df_full_train):
+for fold, (train_idx, val_idx) in enumerate(kfold.split(df_full_train)):
     df_train = df_full_train.iloc[train_idx]
     df_val = df_full_train.iloc[val_idx]
 
@@ -106,9 +118,7 @@ for train_idx, val_idx in kfold.split(df_full_train):
     auc = roc_auc_score(y_val, y_pred)
     scores.append(auc)
 
-    print(f'auc on fold {fold} is {auc}')
-    fold = fold + 1
-
+    print(f'auc on fold {fold} is {auc:.3f}')
 
 print('validation results:')
 print('C=%s %.3f +- %.3f' % (C, np.mean(scores), np.std(scores)))
@@ -118,16 +128,18 @@ print('C=%s %.3f +- %.3f' % (C, np.mean(scores), np.std(scores)))
 
 print('training the final model')
 
-dv, model = train(df_full_train, df_full_train.churn.values, C=1.0)
+dv, model = train(df_full_train, df_full_train.churn.values, C=C)
 y_pred = predict(df_test, dv, model)
 
 y_test = df_test.churn.values
 auc = roc_auc_score(y_test, y_pred)
 
-print(f'auc={auc}')
+print(f'auc={auc:.3f}')
 
 
-# Save the model
+# save the model
+
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
 with open(output_file, 'wb') as f_out:
     pickle.dump((dv, model), f_out)

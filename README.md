@@ -101,6 +101,7 @@ Logistic regression was chosen over a tree ensemble deliberately. A gradient-boo
 
 ```
 data/churn.csv                  Telco customer data, 7,043 rows, 21 columns
+
 notebooks/churn_project.ipynb   Full analysis: cleaning, EDA, feature importance,
                                 evaluation, cross-validation, and the retention
                                 budget model behind the tables above
